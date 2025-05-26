@@ -2,9 +2,14 @@ const db = require('../config/db');
 
 // ➕ Ajouter un produit au panier
 exports.addToCart = (req, res) => {
-  const userId = req.user.id;
+
   const { productId, quantity } = req.body;
 
+  if (!productId || !quantity) {
+  return res.status(400).json({ message: 'productId et quantity sont requis' });
+}
+
+const userId = req.user.id;
   // Vérifie si le panier existe pour cet utilisateur
   db.query('SELECT * FROM cart WHERE user_id = ?', [userId], (err, result) => {
     if (err) throw err;

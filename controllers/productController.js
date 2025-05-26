@@ -86,3 +86,26 @@ exports.deleteProduct = (req, res) => {
   });
 };
 
+// 🔍 Filtrer par nom + tri alphabétique
+exports.getProducts = (req, res) => {
+  const { name, sort } = req.query;
+  let sql = 'SELECT * FROM products';
+  const params = [];
+
+  if (name) {
+    sql += ' WHERE name LIKE ?';
+    params.push(`%${name}%`);
+  }
+
+  // ✅ Ajoute le tri si demandé
+  if (sort === 'asc') {
+    sql += ' ORDER BY name ASC';
+  } else if (sort === 'desc') {
+    sql += ' ORDER BY name DESC';
+  }
+
+  db.query(sql, params, (err, results) => {
+    if (err) throw err;
+    res.json(results);
+  });
+};

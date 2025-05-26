@@ -11,6 +11,6 @@ router.post('/', verifyToken, isAdmin, productController.addProduct); // admin o
 router.put('/:id', verifyToken, isAdmin, productController.updateProduct);
 
 router.delete('/:id', verifyToken, isAdmin, productController.deleteProduct);
-
+router.get('/', productController.getProducts);
 
 module.exports = router;

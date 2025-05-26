@@ -277,3 +277,167 @@ exports.getOrderByIdAdmin = (req, res) => {
   
 
 };
+
+// 💳 Marquer une commande comme payée (utilisateur connecté)
+exports.payOrder = (req, res) => {
+  const userId = req.user.id;
+  const orderId = req.params.id;
+
+  // Vérifie que la commande appartient à l'utilisateur
+  db.query(
+    'SELECT * FROM orders WHERE id = ? AND user_id = ?',
+    [orderId, userId],
+    (err, result) => {
+      if (err) throw err;
+
+      if (result.length === 0) {
+        return res.status(403).json({ message: "Commande introuvable ou non autorisée" });
+      }
+
+      // Mise à jour : passer à payé
+      db.query(
+        'UPDATE orders SET is_paid = true WHERE id = ?',
+        [orderId],
+        (err) => {
+          if (err) throw err;
+          res.json({ message: "Commande payée avec succès", order_id: orderId });
+        }
+      );
+    }
+  );
+};
+
+// 💳 Vue ADMIN – Voir les commandes payées uniquement
+exports.getPaidOrders = (req, res) => {
+  const sql = `
+    SELECT 
+      o.id AS order_id,
+      o.created_at AS order_date,
+      o.total,
+      o.status,
+      o.is_paid,
+      u.name AS user_name,
+      u.email AS user_email,
+      p.name AS product_name,
+      oi.quantity,
+      oi.price
+    FROM orders o
+    JOIN users u ON o.user_id = u.id
+    JOIN orderItems oi ON o.id = oi.order_id
+    JOIN products p ON oi.product_id = p.id
+    WHERE o.is_paid = true
+    ORDER BY o.created_at DESC
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) throw err;
+
+    const orders = {};
+
+    results.forEach(row => {
+      if (!orders[row.order_id]) {
+        orders[row.order_id] = {
+          order_id: row.order_id,
+          order_date: row.order_date,
+          total: row.total,
+          status: row.status,
+          is_paid: row.is_paid,
+          user: {
+            name: row.user_name,
+            email: row.user_email
+          },
+          items: []
+        };
+      }
+
+      orders[row.order_id].items.push({
+        product: row.product_name,
+        quantity: row.quantity,
+        price: row.price
+      });
+    });
+
+    res.json(Object.values(orders));
+  });
+};
+
+// 💳 Vue ADMIN – Voir les commandes non payées
+exports.getUnpaidOrders = (req, res) => {
+  const sql = `
+    SELECT 
+      o.id AS order_id,
+      o.created_at AS order_date,
+      o.total,
+      o.status,
+      o.is_paid,
+      u.name AS user_name,
+      u.email AS user_email,
+      p.name AS product_name,
+      oi.quantity,
+      oi.price
+    FROM orders o
+    JOIN users u ON o.user_id = u.id
+    JOIN orderItems oi ON o.id = oi.order_id
+    JOIN products p ON oi.product_id = p.id
+    WHERE o.is_paid = false
+    ORDER BY o.created_at DESC
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) throw err;
+
+    const orders = {};
+
+    results.forEach(row => {
+      if (!orders[row.order_id]) {
+        orders[row.order_id] = {
+          order_id: row.order_id,
+          order_date: row.order_date,
+          total: row.total,
+          status: row.status,
+          is_paid: row.is_paid,
+          user: {
+            name: row.user_name,
+            email: row.user_email
+          },
+          items: []
+        };
+      }
+
+      orders[row.order_id].items.push({
+        product: row.product_name,
+        quantity: row.quantity,
+        price: row.price
+      });
+    });
+
+    res.json(Object.values(orders));
+  });
+};
+
+// 📊 Vue ADMIN – Statistiques globales des commandes
+exports.getOrderStats = (req, res) => {
+  const sql = `
+    SELECT 
+      COUNT(*) AS total_orders,
+      SUM(CASE WHEN is_paid = true THEN 1 ELSE 0 END) AS paid_orders,
+      SUM(CASE WHEN is_paid = false THEN 1 ELSE 0 END) AS unpaid_orders,
+      SUM(CASE WHEN is_paid = true THEN total ELSE 0 END) AS total_revenue,
+      ROUND(
+        CASE 
+          WHEN SUM(CASE WHEN is_paid = true THEN 1 ELSE 0 END) = 0 
+          THEN 0 
+          ELSE SUM(CASE WHEN is_paid = true THEN total ELSE 0 END) /
+               SUM(CASE WHEN is_paid = true THEN 1 ELSE 0 END)
+        END,
+        2
+      ) AS average_order_paid
+    FROM orders
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) throw err;
+    res.json(results[0]); // Un seul objet retourné
+  });
+};
+

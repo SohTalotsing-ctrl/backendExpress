@@ -16,10 +16,17 @@ router.get('/all', verifyToken, isAdmin, orderController.getAllOrders);
 // 🔄 ADMIN : modifier le statut d'une commande
 router.patch('/:id/status', verifyToken, isAdmin, orderController.updateOrderStatus);
 
+router.get('/stats', verifyToken, isAdmin, orderController.getOrderStats);
+router.get('/unpaid', verifyToken, isAdmin, orderController.getUnpaidOrders);
+router.get('/paid', verifyToken, isAdmin, orderController.getPaidOrders);
+
 // 👁️‍🗨️ ADMIN : voir une commande par ID
 router.get('/admin/:id', verifyToken, isAdmin, orderController.getOrderByIdAdmin);
 
 // 👤 UTILISATEUR : voir sa commande par ID
 router.get('/:id', verifyToken, orderController.getOrderById);
+
+router.patch('/:id/pay', verifyToken, orderController.payOrder);
+
 
 module.exports = router;
