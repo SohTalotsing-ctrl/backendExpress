@@ -86,7 +86,7 @@ exports.deleteProduct = (req, res) => {
   });
 };
 
-// 🔍 Filtrer par nom + tri alphabétique
+// Filtrer par nom + tri alphabétique
 exports.getProducts = (req, res) => {
   const { name, sort } = req.query;
   let sql = 'SELECT * FROM products';
@@ -97,7 +97,7 @@ exports.getProducts = (req, res) => {
     params.push(`%${name}%`);
   }
 
-  // ✅ Ajoute le tri si demandé
+  //  Ajoute le tri si demandé
   if (sort === 'asc') {
     sql += ' ORDER BY name ASC';
   } else if (sort === 'desc') {

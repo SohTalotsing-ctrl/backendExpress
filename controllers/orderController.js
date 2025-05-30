@@ -277,34 +277,47 @@ exports.getOrderByIdAdmin = (req, res) => {
   
 
 };
+// 🧾 Afficher les instructions MoMo
+exports.showPaymentInstructions = (req, res) => {
+  const orderId = req.params.id;
+  const userId = req.user.id;
 
-// 💳 Marquer une commande comme payée (utilisateur connecté)
-exports.payOrder = (req, res) => {
+  const sql = "SELECT * FROM orders WHERE id = ? AND user_id = ?";
+  db.query(sql, [orderId, userId], (err, results) => {
+    if (err) throw err;
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: "Commande non trouvée" });
+    }
+
+    res.json({
+      message: "Veuillez effectuer un dépôt MTN Mobile Money au 678558803",
+      instructions: "Tapez *126# sur votre téléphone et envoyez le montant exact.",
+      note: "Une fois le paiement effectué, cliquez sur 'J’ai payé' pour valider.",
+      status: "en_attente_paiement",
+      order_id: orderId
+    });
+  });
+};
+// ✅ Confirmer manuellement le paiement (après dépôt MoMo)
+exports.confirmPayment = (req, res) => {
   const userId = req.user.id;
   const orderId = req.params.id;
 
-  // Vérifie que la commande appartient à l'utilisateur
-  db.query(
-    'SELECT * FROM orders WHERE id = ? AND user_id = ?',
-    [orderId, userId],
-    (err, result) => {
-      if (err) throw err;
+  const checkSql = "SELECT * FROM orders WHERE id = ? AND user_id = ?";
+  db.query(checkSql, [orderId, userId], (err, results) => {
+    if (err) throw err;
 
-      if (result.length === 0) {
-        return res.status(403).json({ message: "Commande introuvable ou non autorisée" });
-      }
-
-      // Mise à jour : passer à payé
-      db.query(
-        'UPDATE orders SET is_paid = true WHERE id = ?',
-        [orderId],
-        (err) => {
-          if (err) throw err;
-          res.json({ message: "Commande payée avec succès", order_id: orderId });
-        }
-      );
+    if (results.length === 0) {
+      return res.status(403).json({ message: "Commande introuvable ou non autorisée" });
     }
-  );
+
+    const updateSql = "UPDATE orders SET is_paid = true WHERE id = ?";
+    db.query(updateSql, [orderId], (err) => {
+      if (err) throw err;
+      res.json({ message: "✅ Paiement confirmé avec succès", order_id: orderId });
+    });
+  });
 };
 
 // 💳 Vue ADMIN – Voir les commandes payées uniquement

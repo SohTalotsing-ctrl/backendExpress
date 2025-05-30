@@ -3,13 +3,13 @@ const router = express.Router();
 const verifyToken = require('../middleware/verifyToken');
 const cartController = require('../controllers/cartController');
 
-// ➕ Ajouter au panier
+//  Ajouter au panier
 router.post('/', verifyToken, cartController.addToCart);
 
-// 📦 Voir le panier
+// Voir le panier
 router.get('/', verifyToken, cartController.getCart);
 
-// ❌ Supprimer un article
+// Supprimer un article
 router.delete('/:id', verifyToken, cartController.removeFromCart);
 
 module.exports = router;

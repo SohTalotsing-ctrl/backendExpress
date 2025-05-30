@@ -38,7 +38,7 @@ exports.login = (req, res) => {
       return res.status(401).json({ message: 'Mot de passe incorrect' });
     }
 
-    // ✅ Le token contient id et role
+    // Le token contient id et role
     const token = jwt.sign(
       {
         id: result[0].id,

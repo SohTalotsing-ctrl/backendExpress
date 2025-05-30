@@ -1,6 +1,6 @@
 const db = require('../config/db');
 
-// ➕ Ajouter un produit au panier
+// Ajouter un produit au panier
 exports.addToCart = (req, res) => {
 
   const { productId, quantity } = req.body;
@@ -63,7 +63,7 @@ const userId = req.user.id;
   });
 };
 
-// 📦 Voir les produits du panier
+//  Voir les produits du panier
 exports.getCart = (req, res) => {
   const userId = req.user.id;
 
@@ -87,7 +87,7 @@ exports.getCart = (req, res) => {
   });
 };
 
-// ❌ Supprimer un article du panier
+// Supprimer un article du panier
 exports.removeFromCart = (req, res) => {
   const userId = req.user.id;
   const cartProductId = req.params.id;
