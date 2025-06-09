@@ -6,16 +6,16 @@ const jwt = require('jsonwebtoken');
 exports.register = (req, res) => {
   const { name, email, password } = req.body;
 
-  // 1. Vérifier si l'email existe déjà
+  //  Vérifier si l'email existe déjà
   db.query('SELECT * FROM users WHERE email = ?', [email], async (err, result) => {
     if (result.length > 0) {
       return res.status(400).json({ message: 'Email déjà utilisé' });
     }
 
-    // 2. Hasher le mot de passe
+    // Hasher le mot de passe
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 3. Insérer l'utilisateur
+    //  Insérer l'utilisateur
     db.query('INSERT INTO users SET ?', { name, email, password: hashedPassword }, (err) => {
       if (err) throw err;
       res.status(201).json({ message: 'Inscription réussie' });

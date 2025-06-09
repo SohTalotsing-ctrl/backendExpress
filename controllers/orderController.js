@@ -3,7 +3,7 @@ const db = require('../config/db');
 exports.createOrder = (req, res) => {
   const userId = req.user.id;
 
-  // 1. Vérifie si l'utilisateur a un panier
+  // Vérifie si l'utilisateur a un panier
   const cartQuery = `
     SELECT 
       cp.product_id, cp.quantity, p.price
@@ -19,15 +19,15 @@ exports.createOrder = (req, res) => {
       return res.status(400).json({ message: 'Panier vide' });
     }
 
-    // 2. Calcul du total
+    // Calcul du total
     const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-    // 3. Création de la commande
+    //  Création de la commande
     db.query('INSERT INTO orders (user_id, total) VALUES (?, ?)', [userId, total], (err, result) => {
       if (err) throw err;
       const orderId = result.insertId;
 
-      // 4. Préparation des lignes de commande
+      // Préparation des lignes de commande
       const itemsData = cartItems.map(item => [orderId, item.product_id, item.quantity, item.price]);
 
       db.query(
@@ -36,7 +36,7 @@ exports.createOrder = (req, res) => {
         (err) => {
           if (err) throw err;
 
-          // 5. Optionnel : vider le panier après validation
+          //  Optionnel : vider le panier après validation
           db.query(`
             DELETE cp FROM cartProducts cp
             JOIN cart c ON cp.cart_id = c.id
@@ -50,7 +50,7 @@ exports.createOrder = (req, res) => {
   });
 };
 
-// 📜 Récupérer l'historique des commandes de l'utilisateur connecté
+// Récupérer l'historique des commandes de l'utilisateur connecté
 exports.getOrderHistory = (req, res) => {
   const userId = req.user.id;
 
@@ -73,7 +73,7 @@ exports.getOrderHistory = (req, res) => {
   db.query(sql, [userId], (err, results) => {
     if (err) throw err;
 
-    // 🧠 Organiser les résultats par commande
+    // Organiser les résultats par commande
     const orders = {};
 
     results.forEach(row => {
@@ -94,11 +94,11 @@ exports.getOrderHistory = (req, res) => {
       });
     });
 
-    res.json(Object.values(orders)); // ✅ tableau des commandes
+    res.json(Object.values(orders)); // tableau des commandes
   });
 };
 
-// 🔐 Vue ADMIN – Liste de toutes les commandes avec détails
+//  Vue ADMIN – Liste de toutes les commandes avec détails
 exports.getAllOrders = (req, res) => {
   const sql = `
     SELECT 
@@ -121,7 +121,7 @@ exports.getAllOrders = (req, res) => {
   db.query(sql, (err, results) => {
     if (err) throw err;
 
-    // 📦 Structurer les commandes avec leurs produits
+    //  Structurer les commandes avec leurs produits
     const orders = {};
 
     results.forEach(row => {
@@ -149,18 +149,18 @@ exports.getAllOrders = (req, res) => {
     res.json(Object.values(orders));
   });
 };
-// 🔄 Mise à jour du statut d'une commande (admin uniquement)
+//  Mise à jour du statut d'une commande (admin uniquement)
 exports.updateOrderStatus = (req, res) => {
   const orderId = req.params.id;
   const { status } = req.body;
 
-  // ✅ Vérification : statut valide
+  //  Vérification : statut valide
   const allowedStatuses = ['en_attente', 'validee', 'livree'];
   if (!allowedStatuses.includes(status)) {
     return res.status(400).json({ message: 'Statut invalide' });
   }
 
-  // 🛠️ Mise à jour SQL
+  //  Mise à jour SQL
   db.query(
     'UPDATE orders SET status = ? WHERE id = ?',
     [status, orderId],
@@ -175,7 +175,7 @@ exports.updateOrderStatus = (req, res) => {
     }
   );
 };
-// 🔍 Voir une commande spécifique (utilisateur connecté)
+//  Voir une commande spécifique (utilisateur connecté)
 exports.getOrderById = (req, res) => {
   const userId = req.user.id;
   const orderId = req.params.id;
@@ -223,7 +223,7 @@ exports.getOrderById = (req, res) => {
   });
   
 };
-// 👁️‍🗨️ Vue ADMIN – Voir une commande par ID, avec détails utilisateur
+//  Vue ADMIN – Voir une commande par ID, avec détails utilisateur
 exports.getOrderByIdAdmin = (req, res) => {
   const orderId = req.params.id;
 
@@ -277,7 +277,7 @@ exports.getOrderByIdAdmin = (req, res) => {
   
 
 };
-// 🧾 Afficher les instructions MoMo
+// Afficher les instructions MoMo
 exports.showPaymentInstructions = (req, res) => {
   const orderId = req.params.id;
   const userId = req.user.id;
@@ -299,7 +299,7 @@ exports.showPaymentInstructions = (req, res) => {
     });
   });
 };
-// ✅ Confirmer manuellement le paiement (après dépôt MoMo)
+//  Confirmer manuellement le paiement (après dépôt MoMo)
 exports.confirmPayment = (req, res) => {
   const userId = req.user.id;
   const orderId = req.params.id;
@@ -315,12 +315,12 @@ exports.confirmPayment = (req, res) => {
     const updateSql = "UPDATE orders SET is_paid = true WHERE id = ?";
     db.query(updateSql, [orderId], (err) => {
       if (err) throw err;
-      res.json({ message: "✅ Paiement confirmé avec succès", order_id: orderId });
+      res.json({ message: " Paiement confirmé avec succès", order_id: orderId });
     });
   });
 };
 
-// 💳 Vue ADMIN – Voir les commandes payées uniquement
+// Vue ADMIN – Voir les commandes payées uniquement
 exports.getPaidOrders = (req, res) => {
   const sql = `
     SELECT 
@@ -374,7 +374,7 @@ exports.getPaidOrders = (req, res) => {
   });
 };
 
-// 💳 Vue ADMIN – Voir les commandes non payées
+//  Vue ADMIN – Voir les commandes non payées
 exports.getUnpaidOrders = (req, res) => {
   const sql = `
     SELECT 
@@ -428,7 +428,7 @@ exports.getUnpaidOrders = (req, res) => {
   });
 };
 
-// 📊 Vue ADMIN – Statistiques globales des commandes
+// Vue ADMIN – Statistiques globales des commandes
 exports.getOrderStats = (req, res) => {
   const sql = `
     SELECT 
